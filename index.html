@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>map</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
     <style>
       #map {
         height: 100%;
@@ -23,6 +24,18 @@
         background-color: white;
         font-family: Meriyo UI;
         font-size: 14px;
+        overflow: auto;
+      }
+      .no {
+        font-size: large;
+      }
+      .name {
+        font-size: large;
+      }
+      .item {
+        display: grid;
+        align-items: center;
+        width: 100%;
       }
     </style>
   </head>
@@ -30,16 +43,37 @@
     <div id="map"></div>
     <td><div id="sidebar"></div></td>
     <script src="constants.js"></script>
+    <script src="jquery-3.3.1.slim.min.js"></script>
+    <script src="popper.min.js"></script>
+    <script src="bootstrap.min.js"></script>
     <script async src="https://maps.googleapis.com/maps/api/js?language=ja&region=JP&key=AIzaSyDHXtA3rZxKFTsi2cbbVOndYmMGPQ0BCLM&callback=initMap"></script>
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script>
       var map;
       var marker = [];
       var infoWindow = [];
       var windowOpened;
+      var markerData = [];
 
       function parseData(data) {
         var keys = data.values[0];
-        var markerData = [];
+        // var markerData = [];
         data.values.forEach(function(value, i) {
           if (i > 0) {
             var hash = {};
@@ -84,7 +118,8 @@
           map: map
         });
 
-        var info = '<div style="font-size:18px;font-weight:bold;margin-bottom:10px;">' + data['名称'] + '</div>';
+        var detail = `<button type="button" class="btn btn-primary btn-sm ml-2 mr-1" data-toggle="modal" data-target="#exampleModalLong" data-index="${i}">詳細</button>`;
+        var info = `<div class="item"><div style="font-size:18px;font-weight:bold;">${data['名称']}${detail}</div></div>`;
         infoWindow[i] = new google.maps.InfoWindow({
           content: info
         });
@@ -99,11 +134,12 @@
           if (!latitude) { continue; }
           addMarker(i, markerData[i]);
           var name = markerData[i]['名称'];
-
-          sidebar_html += `<b>${i + 1}</b> <a href="javascript:openWindow(${i})">${name}<\/a><br />`;
+          var detail = `<button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#exampleModalLong" data-index="${i}">詳細</button>`;
+          sidebar_html += `<div class="item pb-2 mb-2 border-bottom"><div><b class="no mr-2">${i + 1}</b><a class="name" href="javascript:openWindow(${i})">${name}<\/a></div> ${detail}</div>`;
         }
 
-        document.getElementById("sidebar").innerHTML = `<a target="_blank" href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing">元データ(Google スプレッドシート)</a><br /><br />` + sidebar_html;
+        // document.getElementById("sidebar").innerHTML = `<a target="_blank" href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing">元データ(Google スプレッドシート)</a><br /><br />` + sidebar_html;
+        document.getElementById("sidebar").innerHTML = sidebar_html;
       }
 
       function markerEvent(i) {
@@ -119,6 +155,38 @@
         infoWindow[i].open(map, marker[i]);
         windowOpened = infoWindow[i];
       }
+      
+      $('#exampleModalLong').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var index = button.data('index');
+        var data = markerData[index];
+        var modal = $(this);
+
+        if (data === undefined) {
+          return;
+        }
+
+        var html = "";
+        var images = data['写真'].split(',');
+
+        html += `住所: ${data['住所']}`;
+        html += `<br />`;
+        html += `写真: `;
+        images.forEach((item, index) => {
+          if (item !== "") {
+            html += `<span style="margin-right:20px;"><a href="${item}" target="_blank">${index + 1}</a></span>`;
+          }
+        });
+        html += `<br />`;
+        html += `備考: `;
+        html += `<br />`;
+        html += `${data['備考']}`;
+
+        modal.find('.modal-title').empty();
+        modal.find('.modal-body').empty();
+        modal.find('.modal-title').append(data['名称']);
+        modal.find('.modal-body').append(html);
+      });
     </script>
   </body>
 </html>
