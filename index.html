@@ -129,13 +129,16 @@
 
       function setData(markerData){
         var sidebar_html = "";
+        var no = 1;
         for (var i = 0; i < markerData.length; i++) {
+          var timestamp = markerData[i]['タイムスタンプ'];
           var latitude = markerData[i]['緯度'];
-          if (!latitude) { continue; }
+          if (!latitude || !timestamp) { continue; }
           addMarker(i, markerData[i]);
           var name = markerData[i]['名称'];
           var detail = `<button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#exampleModalLong" data-index="${i}">詳細</button>`;
-          sidebar_html += `<div class="item pb-2 mb-2 border-bottom"><div><b class="no mr-2">${i + 1}</b><a class="name" href="javascript:openWindow(${i})">${name}<\/a></div> ${detail}</div>`;
+          sidebar_html += `<div class="item pb-2 mb-2 border-bottom"><div><b class="no mr-2">${no}</b><a class="name" href="javascript:openWindow(${i})">${name}<\/a></div> ${detail}</div>`;
+          no++;
         }
 
         // document.getElementById("sidebar").innerHTML = `<a target="_blank" href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing">元データ(Google スプレッドシート)</a><br /><br />` + sidebar_html;
